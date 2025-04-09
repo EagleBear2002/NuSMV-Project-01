@@ -68,3 +68,4 @@ CTLSPEC AG (node2 = Leader & node3 = Leader -> FALSE) -- 结果为 TRUE
 CTLSPEC EF (node1 = Candidate & node2 = Candidate) -- 结果为 TRUE
 CTLSPEC EF (node2 = Candidate & node3 = Candidate) -- 结果为 TRUE
 CTLSPEC EF (node1 = Candidate & node3 = Candidate) -- 结果为 TRUE
+CTLSPEC EF (node1 = Candidate & node2 = Candidate & node3 = Candidate) -- 结果为 TRUE
