@@ -1,0 +1,60 @@
+MODULE main
+VAR
+  a0 : 0..7;  -- 数组元素 0
+  a1 : 0..7;  -- 数组元素 1
+  a2 : 0..7;  -- 数组元素 2
+  i : 0..2;   -- 外层循环变量
+  j : 0..2;   -- 内层循环变量
+  swapped : boolean;  -- 交换标志
+
+ASSIGN
+  -- 初始化数组和循环变量
+  init(a0) := 0..7;  -- 初始值任意
+  init(a1) := 0..7;
+  init(a2) := 0..7;
+  init(i) := 0;
+  init(j) := 0;
+  init(swapped) := FALSE;
+
+  -- 外层循环控制
+  next(i) := case
+    -- 内层循环完成且未提前退出，递增 i
+    j >= (2 - i -1) & swapped : (i < 2 ? i + 1 : i);
+    TRUE : i;
+  esac;
+
+  -- 内层循环控制
+  next(j) := case
+    -- 内层循环未完成，递增 j
+    j < (2 - i - 1) : j + 1;
+    -- 重置 j 以开始下一轮外层循环
+    j >= (2 - i - 1) : 0;
+    TRUE : j;
+  esac;
+
+  -- 交换逻辑，NuSMV 是同步赋值，变量交换是原子的
+  next(a0) := case
+    -- 比较 a[j] 和 a[j+1]，若需要交换则更新
+    j = 0 & a0 > a1 : a1;  -- 交换 a0 和 a1
+    TRUE : a0;
+  esac;
+
+  next(a1) := case
+    j = 0 & a0 > a1 : a0;  -- 交换 a0 和 a1
+    j = 1 & a1 > a2 : a2;  -- 交换 a1 和 a2
+    TRUE : a1;
+  esac;
+
+  next(a2) := case
+    j = 1 & a1 > a2 : a1;  -- 交换 a1 和 a2
+    TRUE : a2;
+  esac;
+
+  -- 更新 swapped 标志
+  next(swapped) := case
+    (j = 0 & a0 > a1) | (j = 1 & a1 > a2) : TRUE;  -- 发生交换
+    j >= (2 - i - 1) : FALSE;  -- 重置为 FALSE 以开始下一轮
+    TRUE : swapped;
+  esac;
+
+CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (a0 <= a1 & a1 <= a2) ) -- 结果为 TRUE

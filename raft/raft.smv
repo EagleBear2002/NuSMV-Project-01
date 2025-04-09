@@ -1,0 +1,70 @@
+MODULE main
+VAR
+  node1: {Follower, Candidate, Leader};
+  node2: {Follower, Candidate, Leader};
+  node3: {Follower, Candidate, Leader};
+  timer1: 0..10; -- 模拟超时定时器，超时会变为 Candidate
+  timer2: 0..10;
+  timer3: 0..10;
+
+ASSIGN
+  init(node1) := Follower;  -- 节点1初始状态为 Follower
+  init(node2) := Follower;  -- 节点2初始状态为 Follower
+  init(node3) := Follower;  -- 节点3初始状态为 Follower
+  init(timer1) := 0; -- 初始化定时器为 0
+  init(timer2) := 0;
+  init(timer3) := 0;
+
+  -- 定时器更新逻辑，每次增加 1，模拟时间流逝
+  next(timer1) := case
+    node1 = Leader: 0;  -- 如果当前是 Leader，定时器归零
+    node1 = Follower: min(timer1 + 1, 10);  -- Follower 每次增加 1，但不超过 10
+    node1 = Candidate: min(timer1 + 1, 10);  -- Candidate 每次增加 1，但不超过 10
+  esac;
+
+  next(timer2) := case
+    node2 = Leader: 0;  -- 如果当前是 Leader，定时器归零
+    node2 = Follower: min(timer2 + 1, 10);  -- Follower 每次增加 1，但不超过 10
+    node2 = Candidate: min(timer2 + 1, 10);  -- Candidate 每次增加 1，但不超过 10
+  esac;
+
+  next(timer3) := case
+    node3 = Leader: 0;  -- 如果当前是 Leader，定时器归零
+    node3 = Follower: min(timer3 + 1, 10);  -- Follower 每次增加 1，但不超过 10
+    node3 = Candidate: min(timer3 + 1, 10);  -- Candidate 每次增加 1，但不超过 10
+  esac;
+
+  -- 状态转移：若定时器超时，则成为 Candidate，若选举成功，则成为 Leader
+  next(node1) := case
+    timer1 >= 5: Candidate;  -- 如果定时器超过 5，则成为 Candidate
+    node1 = Candidate & timer1 < 5: Follower;  -- 如果处于 Candidate 状态，未超时则变回 Follower
+    node1 = Leader: Leader;  -- 如果是 Leader，则保持 Leader
+    TRUE: node1;  -- 否则保持当前状态
+  esac;
+
+  next(node2) := case
+    timer2 >= 5: Candidate;  -- 如果定时器超过 5，则成为 Candidate
+    node2 = Candidate & timer2 < 5: Follower;  -- 如果处于 Candidate 状态，未超时则变回 Follower
+    node2 = Leader: Leader;  -- 如果是 Leader，则保持 Leader
+    TRUE: node2;  -- 否则保持当前状态
+  esac;
+
+  next(node3) := case
+    timer3 >= 5: Candidate;  -- 如果定时器超过 5，则成为 Candidate
+    node3 = Candidate & timer3 < 5: Follower;  -- 如果处于 Candidate 状态，未超时则变回 Follower
+    node3 = Leader: Leader;  -- 如果是 Leader，则保持 Leader
+    TRUE: node3;  -- 否则保持当前状态
+  esac;
+
+-- 规约 1：三个节点都可能成为 Leader
+CTLSPEC AG (node1 = Leader -> EF (node2 = Leader | node3 = Leader)) -- 结果为 TRUE
+
+-- 规约 2：不会出现多个 Leader
+CTLSPEC AG (node1 = Leader & node2 = Leader -> FALSE) -- 结果为 TRUE
+CTLSPEC AG (node1 = Leader & node3 = Leader -> FALSE) -- 结果为 TRUE
+CTLSPEC AG (node2 = Leader & node3 = Leader -> FALSE) -- 结果为 TRUE
+
+-- 规约 3：可能有多个节点同时想成为 Leader
+CTLSPEC EF (node1 = Candidate & node2 = Candidate) -- 结果为 TRUE
+CTLSPEC EF (node2 = Candidate & node3 = Candidate) -- 结果为 TRUE
+CTLSPEC EF (node1 = Candidate & node3 = Candidate) -- 结果为 TRUE

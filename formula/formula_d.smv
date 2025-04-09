@@ -1,0 +1,16 @@
+MODULE main
+VAR
+  state : {s0, s1, s2};
+ASSIGN
+  init(state) := s0;
+  next(state) := case
+    state = s0 : {s1, s2};
+    state = s1 : s1;
+    state = s2 : s2;
+  esac;
+DEFINE
+  phi1 := (state = s0);
+  phi2 := (state = s1);
+  phi3 := (state = s1) | (state = s2);
+CTLSPEC A[phi1 U A[phi2 U phi3]];  -- 结果为 TRUE
+CTLSPEC A[A[phi1 U phi2] U phi3];  -- 结果为 FALSE

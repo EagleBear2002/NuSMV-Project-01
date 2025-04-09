@@ -1,0 +1,13 @@
+MODULE main
+VAR
+  state : {s0, s1};
+ASSIGN
+  init(state) := s0;
+  next(state) := case
+    state = s0 : s1;
+    state = s1 : s1;
+  esac;
+DEFINE
+  phi := (state = s1);
+CTLSPEC EF(phi);  -- 结果为 TRUE
+CTLSPEC EG(phi);  -- 结果为 FALSE
