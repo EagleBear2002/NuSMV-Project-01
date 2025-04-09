@@ -2,7 +2,7 @@
 
 本仓库是《软件工程理论基础》项目一代码和报告。
 
-`./proj.pdf` 是项目要求，本仓库完成了项目要求中的三个题目。
+`./proj1.pdf` 是项目要求，本仓库完成了项目要求中的三个题目。
 
 【广告】除了 NuSMV 之外，软件工程有另一个形式化验证工具 [TLA+](https://lamport.azurewebsites.net/tla/tla.html?from=https://research.microsoft.com/users/lamport/tla/tla.html&type=path)。该工具由图灵奖获得者 [Leslie Lamport](https://lamport.azurewebsites.net/) 开发（$\LaTeX$ 中的 La 就是指 Lamport）。我的 b 站主页搬运了 Lamport 本人录制的教程 [The TLA+ Video Course](https://www.bilibili.com/video/BV1JG4y1Y7tj/?spm_id_from=333.1387.0.0)，仅供学习。
 
