@@ -9,8 +9,9 @@ VAR
   a2_b2 : boolean;
   a2_b1 : boolean;
   a2_b0 : boolean;
-  i : {0, 1, 2};
-  j : {0, 1};
+  i0 : boolean;
+  i1: boolean;
+  j : boolean;
   swapped : boolean;
 
 DEFINE
@@ -36,74 +37,81 @@ ASSIGN
   init(a2_b0) := {TRUE, FALSE};
 
   -- 初始化控制变量
-  init(i) := 0;
-  init(j) := 0;
+  init(i0) := FALSE;
+  init(i1) := FALSE;
+  init(j) := FALSE;
   init(swapped) := FALSE;
 
   -- 外层循环控制逻辑
-  next(i) := case
-    (i = 0 & j = 1 & swapped) : 1;  -- 完成第一轮冒泡
-    (i = 1 & j = 0 & swapped) : 2;  -- 完成第二轮冒泡
-    TRUE : i;
+  next(i0) := case
+    (i0 = FALSE & i1 = FALSE & j & swapped) : TRUE;  -- 完成第一轮冒泡
+    (i0 = TRUE & i1 = FALSE & !j & swapped) : FALSE;  -- 完成第二轮冒泡
+    TRUE : i0;
+  esac;
+
+  next(i1) := case
+    (i0 = FALSE & i1 = FALSE & j & swapped) : FALSE;  -- 完成第一轮冒泡
+    (i0 = TRUE & i1 = FALSE & !j & swapped) : TRUE;  -- 完成第二轮冒泡
+    TRUE : i1;
   esac;
 
   -- 内层循环控制逻辑
   next(j) := case
-    (i = 0 & j = 0) : 1;  -- 第一轮冒泡比较两次
-    (i = 0 & j = 1) : 0;  -- 重置内层循环
-    (i = 1 & j = 0) : 0;  -- 第二轮冒泡比较一次
+    (i0 = FALSE & i1 = FALSE & !j) : TRUE;  -- 第一轮冒泡比较两次
+    (i0 = FALSE & i1 = FALSE & j) : FALSE;  -- 重置内层循环
+    (i0 = TRUE & i1 = FALSE & !j) : FALSE;  -- 第二轮冒泡比较一次
     TRUE : j;
   esac;
 
   -- 数组元素交换逻辑
   next(a0_b2) := case
-    (j = 0 & greater_a0_a1) : a1_b2;  -- 交换高位
+    (!j & greater_a0_a1) : a1_b2;  -- 交换高位
     TRUE : a0_b2;
   esac;
   next(a0_b1) := case
-    (j = 0 & greater_a0_a1) : a1_b1;  -- 交换中位
+    (!j & greater_a0_a1) : a1_b1;  -- 交换中位
     TRUE : a0_b1;
   esac;
   next(a0_b0) := case
-    (j = 0 & greater_a0_a1) : a1_b0;  -- 交换低位
+    (!j & greater_a0_a1) : a1_b0;  -- 交换低位
     TRUE : a0_b0;
   esac;
 
   next(a1_b2) := case
-    (j = 0 & greater_a0_a1) : a0_b2;  -- 反向交换高位
-    (j = 1 & greater_a1_a2) : a2_b2;  -- 交换高位
+    (!j & greater_a0_a1) : a0_b2;  -- 反向交换高位
+    (j & greater_a1_a2) : a2_b2;  -- 交换高位
     TRUE : a1_b2;
   esac;
   next(a1_b1) := case
-    (j = 0 & greater_a0_a1) : a0_b1;  -- 反向交换中位
-    (j = 1 & greater_a1_a2) : a2_b1;  -- 交换中位
+    (!j & greater_a0_a1) : a0_b1;  -- 反向交换中位
+    (j & greater_a1_a2) : a2_b1;  -- 交换中位
     TRUE : a1_b1;
   esac;
   next(a1_b0) := case
-    (j = 0 & greater_a0_a1) : a0_b0;  -- 反向交换低位
-    (j = 1 & greater_a1_a2) : a2_b0;  -- 交换低位
+    (!j & greater_a0_a1) : a0_b0;  -- 反向交换低位
+    (j & greater_a1_a2) : a2_b0;  -- 交换低位
     TRUE : a1_b0;
   esac;
 
   next(a2_b2) := case
-    (j = 1 & greater_a1_a2) : a1_b2;  -- 反向交换高位
+    (j & greater_a1_a2) : a1_b2;  -- 反向交换高位
     TRUE : a2_b2;
   esac;
   next(a2_b1) := case
-    (j = 1 & greater_a1_a2) : a1_b1;  -- 反向交换中位
+    (j & greater_a1_a2) : a1_b1;  -- 反向交换中位
     TRUE : a2_b1;
   esac;
   next(a2_b0) := case
-    (j = 1 & greater_a1_a2) : a1_b0;  -- 反向交换低位
+    (j & greater_a1_a2) : a1_b0;  -- 反向交换低位
     TRUE : a2_b0;
   esac;
 
   -- 交换标志更新逻辑
   next(swapped) := case
-    (j = 0 & greater_a0_a1) | (j = 1 & greater_a1_a2) : TRUE;
-    (i = 0 & j = 1) | (i = 1 & j = 0) : FALSE;  -- 每轮结束重置标志
+    (!j & greater_a0_a1) | (j & greater_a1_a2) : TRUE;
+    (i0 = FALSE & i1 = FALSE & j) | (i0 = TRUE & i1 = FALSE & !j) : FALSE;  -- 每轮结束重置标志
     TRUE : swapped;
   esac;
 
 -- 验证排序正确性的CTL规范
-CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) -- 结果为 TRUE
+CTLSPEC AG( (i0 = FALSE & i1 = TRUE & !j & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) -- 结果为 TRUE

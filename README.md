@@ -117,7 +117,7 @@ CTLSPEC A[A[phi1 U phi2] U phi3];  -- 结果为 FALSE
 CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (a0 <= a1 & a1 <= a2) ) -- 结果为 TRUE
 ```
 
-`./bubble_sort/bubble_sort_c.smv` 是改进的算法，使用枚举避免整数域运算，并验证了算法的正确性。由于题目限制了变量的取值范围为 `0..7`，因此可以用三个比特（布尔值）来表达一个整数，进而用布尔（逻辑）运算来代替整数运算。
+`./bubble_sort/bubble_sort_c.smv` 是改进的算法，使用枚举避免整数域运算，并验证了算法的正确性。由于题目限制了变量的取值范围为 `0..7`，因此可以用三个比特（布尔值）来表达一个整数，进而用布尔（逻辑）运算来代替整数运算。此外，分别用 2 个比特和 1 个比特来表示 `i` 和 `j`。
 
 ```sql
 DEFINE
@@ -134,7 +134,7 @@ DEFINE
 使用以下规约验证排序结果：
 
 ```sql
-CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) -- 结果为 TRUE
+CTLSPEC AG( (i0 = FALSE & i1 = TRUE & !j & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) -- 结果为 TRUE
 ```
 
 <div style="page-break-after:always"></div>
