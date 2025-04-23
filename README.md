@@ -30,11 +30,60 @@ NuSMV -df filename.smv
 
 ![](README/image-20250409220936979.png)
 
+<div style="page-break-after:always"></div>
+
 ## 公式等价性判断
 
-结论：a 和 d 中两个公式不等价，b 和 c 中两个公式等价。
+结论：a, c 和 d 中两个公式不等价，b 中两个公式等价。
 
-`./formula/fomula_a.smv` 给出了 a 的一个反例；`./formula/fomula_d.smv` 给出了 d 的一个反例。
+`./formula/fomula_a.smv` 给出了 a 的一个反例：
+
+```mermaid
+stateDiagram-v2
+    [*] --> s0
+    s0 --> ϕ
+```
+
+在上述反例中：
+
+```sql
+CTLSPEC EF(phi);  -- 结果为 TRUE
+CTLSPEC EG(phi);  -- 结果为 FALSE
+```
+
+`./formula/fomula_c.smv` 给出了 c 的一个反例：
+
+```mermaid
+stateDiagram-v2
+    [*] --> s0
+    s0 --> ϕ
+    s0 --> ψ
+```
+
+在上述反例中：
+
+```sql
+CTLSPEC AF(phi);  -- 结果为 TRUE
+CTLSPEC AF(psi);  -- 结果为 FALSE
+```
+
+`./formula/fomula_d.smv` 给出了 d 的一个反例：
+
+```mermaid
+stateDiagram-v2
+    [*] --> ϕ1
+    ϕ1 --> ϕ2,ϕ3
+    ϕ1 --> ϕ3
+```
+
+在上述反例中：
+
+```sql
+CTLSPEC A[phi1 U A[phi2 U phi3]];  -- 结果为 TRUE
+CTLSPEC A[A[phi1 U phi2] U phi3];  -- 结果为 FALSE
+```
+
+<div style="page-break-after:always"></div>
 
 ## 冒泡排序建模
 
@@ -42,7 +91,7 @@ NuSMV -df filename.smv
 
 基本思路是，根据 `j` 的取值来实现交换逻辑，例如下面代码片段。值得注意，NuSMV 是同步赋值，因此 `a0` 和 `a1` 的更新基于当前状态的值，下面写法中的变量交换是原子的。
 
-```smv
+```sql
   -- 交换逻辑
   next(a0) := case
     -- 比较 a[j] 和 a[j+1]，若需要交换则更新
@@ -64,13 +113,13 @@ NuSMV -df filename.smv
 
 使用以下规约验证排序结果：
 
-```smv
+```sql
 CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (a0 <= a1 & a1 <= a2) ) -- 结果为 TRUE
 ```
 
 `./bubble_sort/bubble_sort_c.smv` 是改进的算法，使用枚举避免整数域运算，并验证了算法的正确性。由于题目限制了变量的取值范围为 `0..7`，因此可以用三个比特（布尔值）来表达一个整数，进而用布尔（逻辑）运算来代替整数运算。
 
-```smv
+```sql
 DEFINE
   -- 定义比较逻辑（使用位比较代替数值比较）
   greater_a0_a1 := (a0_b2 & !a1_b2) | 
@@ -84,9 +133,11 @@ DEFINE
 
 使用以下规约验证排序结果：
 
-```smv
+```sql
 CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) -- 结果为 TRUE
 ```
+
+<div style="page-break-after:always"></div>
 
 ## Raft 算法建模
 
@@ -94,7 +145,7 @@ CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) --
 
 对每个定时器制定相同的计时规则：
 
-```smv
+```sql
   -- 定时器更新逻辑，每次增加 1，模拟时间流逝
   next(timer1) := case
     node1 = Leader: 0;  -- 如果当前是 Leader，定时器归零
@@ -117,7 +168,7 @@ CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) --
 
 根据 Raft 协议规定，描述节点之间的状态转移关系：
 
-```smv
+```sql
   -- 状态转移：若定时器超时，则成为 Candidate，若选举成功，则成为 Leader
   next(node1) := case
     timer1 >= 5: Candidate;  -- 如果定时器超过 5，则成为 Candidate
@@ -145,7 +196,7 @@ CTLSPEC AG( (i = 2 & j = 0 & !swapped) -> (!greater_a0_a1 & !greater_a1_a2) ) --
 
 使用以下规约验证协议一致性和安全性：
 
-```smv
+```sql
 -- 规约 1：三个节点都可能成为 Leader
 CTLSPEC AG (node1 = Leader -> EF (node2 = Leader | node3 = Leader)) -- 结果为 TRUE
 

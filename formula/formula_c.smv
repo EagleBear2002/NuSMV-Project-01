@@ -1,0 +1,16 @@
+MODULE main
+VAR
+  state : {s0, s1, s2};
+ASSIGN
+  init(state) := s0;
+  next(state) := case
+    state = s0 : s1;
+    state = s0 : s2;
+    state = s1 : s1;
+    state = s2 : s2;
+  esac;
+DEFINE
+  phi := (state = s1);
+  psi := (state = s2);
+CTLSPEC AF(phi);  -- 结果为 TRUE
+CTLSPEC AF(psi);  -- 结果为 FALSE
